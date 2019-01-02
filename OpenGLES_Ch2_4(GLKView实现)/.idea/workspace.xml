@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2c7bc2de-6e37-42b4-aa57-30e27693f2a3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/OpenGLES_Ch2_1/AEAGLVertexAttributeArrayBuffer.h" beforeDir="false" afterPath="$PROJECT_DIR$/OpenGLES_Ch2_1/AEAGLVertexAttributeArrayBuffer.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/OpenGLES_Ch2_1/AEAGLVertexAttributeArrayBuffer.m" beforeDir="false" afterPath="$PROJECT_DIR$/OpenGLES_Ch2_1/AEAGLVertexAttributeArrayBuffer.m" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../OpenGL ES应用开发实践指南 iOS 卷(3).md" beforeDir="false" afterPath="$PROJECT_DIR$/../OpenGL ES应用开发实践指南 iOS 卷(3).md" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -209,12 +206,12 @@
       <workItem from="1545888955519" duration="3326000" />
       <workItem from="1545973157853" duration="2949000" />
       <workItem from="1546047345131" duration="10594000" />
-      <workItem from="1546419546980" duration="1915000" />
+      <workItem from="1546419546980" duration="2120000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="24112000" />
+    <option name="totallyTimeSpent" value="24317000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="2556" height="1337" extended-state="6" />
