@@ -123,7 +123,7 @@ static const SenceVertex vertices[] = {
   在这个方法中为 OpenGL ES 提供三角形的顶点数据.  
   `setCurrentContext` 可以设置为当前使用的上下文  
   
-  `initWithAPU:`方法声明了当前使用的 OpenGL ES 版本.  
+  `initWithAPI:`方法声明了当前使用的 OpenGL ES 版本.  
   `baseEffect` 的属性设置  ,下面代码中使用一个恒定不变的白色来渲染三角形  
   `constantColor` 的赋值中定义的四个颜色元素值的C 数据结构体 GLKVector4 来设置这个恒定的颜色;  
   `glClearColor` 函数设置当前OpenGL ES 的上下文 '清除颜色"  
@@ -149,7 +149,7 @@ static const SenceVertex vertices[] = {
     // 生成一个唯一标识符
     glGenBuffers(1, &vertexBufferID); // 第一个参数: 生成缓存标识符的数量,2. 指针
     // 为接下来的运算绑定缓存,指定标识符缓存到当前缓存
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID); // 任意时刻每种类型智能绑定一个缓存.
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID); // 任意时刻每种类型只能绑定一个缓存.
     // 赋值数据到缓存中
         /**
      * 参数说明
@@ -366,7 +366,7 @@ static const SenceVertex vertices[] = {
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
     }
-    _context = nil;
+    _context = nil;da
 }
 ```
 
@@ -382,6 +382,101 @@ GLKit 类封装并简化了 Cocoa Touch 应用和 OpenGL ES 之间的常见交�
 
 * 清除帧缓存
 * 使用一个顶点 数组缓存来绘图	
+
+GLKVertexAttribArrayBuffer 封装了使用OpenGL ES 2.0 的顶点属性数组缓存的所有7个步骤. 这个函数减少了应用需要调用的OpenGL ES 函数的数量. 在后续章节的例子中重用 `AGLKVertexAttribArrayBuffer` 会尽可能减少与7 个缓存管理步骤相关的错误的同事减少代码的编写量.  
+
+```objc
+@interface AEAGLVertexAttributeArrayBuffer : NSObject
+
+@property(nonatomic, assign) GLsizeiptr stride;
+@property(nonatomic, assign) GLsizeiptr bufferSizeBytes;
+
+@property(nonatomic, assign) GLuint glName;
+
+- (instancetype)initWithAttribStride:(GLsizeiptr)stride
+                    numberOfVertices:(GLsizei)count
+                                data:(const GLvoid*)offset
+                               usage:(GLenum)usage;
+
+- (void)prepareToDrawWithAttrib:(GLuint)index
+            numberOfCooradinate:(GLuint)count
+                   attribOffset:(GLsizeiptr)offset
+                   shouldEnable:(BOOL)shouldEnable;
+
+- (void)drawArrayWithMode:(GLenum)mode
+         startVertexIndex:(GLuint)first
+         numberOfVertices:(GLsizei)count;
+
+
+@end
+
+```
+
+这三个方法中封装了7 个缓存管理步骤. 此类中包含一些错误检查代码,除此之外还包含一个缓存管理代码的简单重用和重构.另外实现了一个 `-dealloc`方法来删除一个相关联的 OpenGL  ES 缓存标识符.  
+
+```objc
+
+- (instancetype)initWithAttribStride:(GLsizeiptr)stride
+                    numberOfVertices:(GLsizei)count
+                                data:(const GLvoid*)data
+                               usage:(GLenum)usage {
+    NSParameterAssert(stride > 0);
+    NSParameterAssert(count > 0);
+    NSParameterAssert(data != NULL);
+
+    if (self = [super init]) {
+        _stride = stride;
+        _bufferSizeBytes = count * stride;
+        glGenBuffers(1, &_glName);
+        glBindBuffer(GL_ARRAY_BUFFER, _glName);
+        glBufferData(GL_ARRAY_BUFFER, _bufferSizeBytes, data, usage);
+        NSAssert(_glName != 0, @"fail to generate glName");
+    }
+    return self;
+}
+
+- (void)prepareToDrawWithAttrib:(GLuint)index
+            numberOfCooradinate:(GLuint)count
+                   attribOffset:(GLsizeiptr)offset
+                   shouldEnable:(BOOL)shouldEnable {
+
+    NSParameterAssert((count > 0) && (count < 4));
+    NSParameterAssert(offset < self.stride);
+    NSAssert(self.glName > 0, @"invalide glName!");
+
+    glBindBuffer(GL_ARRAY_BUFFER, self.glName);
+    if (shouldEnable) {
+        glEnableVertexAttribArray(index);
+    }
+
+    glVertexAttribPointer(index, count, GL_FLOAT, GL_FALSE, self.stride, NULL + offset);
+
+}
+
+- (void)drawArrayWithMode:(GLenum)mode
+         startVertexIndex:(GLuint)first
+         numberOfVertices:(GLsizei)count {
+
+    NSAssert(self.bufferSizeBytes >= ((first + count) * self.stride), @"attemp to draw more vertex data than available");
+    glDrawArrays(mode, first, count);
+}
+
+- (void)dealloc {
+    if (_glName != 0) {
+        glDeleteBuffers(1, &_glName);
+        _glName = 0;
+    }
+}
+
+```
+
+AGLKVertexAttribArrayBuffer 和 AGLKContext 类扩展了 GLKit 引入的代码样式,
+
+### 2.6 小结
+
+所有的图形 iOS 应用都包含 Core Animation 层. 所有的绘图都发生在层上, Core Animation 合成器会混合当前应用与操作系统的层, 从而在 OpenGL ES 的后帧缓存中产生最终的像素颜色. 之后 Core Animation 合成器切换前后帧缓存以便吧合成的内容显示到屏幕上.  
+
+使用OpenGL ES 的 Cocoa Touch 应用要么使用 Core Animation 层配置一个与一个 OpenGL ES 的帧缓存分型内存的自定义 UIView, 要么使用内建的 GLKView 类. GLKView 已经处理了细节,因此一般情况框不需要重新继承 UIView 去实现功能. 一个 OpenGL 上下文会存储当前 OpenGL ES 的状态, 并控制 GPU 硬件. 每个GLKView 实例都需要一个上下文.  
 
 
 
